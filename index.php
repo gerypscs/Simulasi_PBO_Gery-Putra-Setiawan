@@ -1,183 +1,83 @@
 <?php
-// index.php
-
-// 1. Load semua file yang dibutuhkan
 require_once 'koneksi.php';
-require_once 'PendaftaranRegular.php';
+require_once 'Pendaftaran.php'; // WAJIB DIPANGGIL SEBELUM KELAS ANAK NYA!
+require_once 'PendaftaranReguler.php';
 require_once 'PendaftaranPrestasi.php';
 require_once 'PendaftaranKedinasan.php';
 
-// 2. Inisialisasi koneksi database
-$koneksi = new Database();
-$db = $koneksi->getConnection();
+$dataReguler   = PendaftaranReguler::ambilDataReguler($koneksi);
+$dataPrestasi  = PendaftaranPrestasi::ambilDataPrestasi($koneksi);
+$dataKedinasan = PendaftaranKedinasan::ambilDataKedinasan($koneksi);
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Manajemen Pendaftaran Mahasiswa Baru</title>
+    <title>Sistem Informasi PMB Jalur Spesifik</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f6f9; color: #333; }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
-        h2 { color: #2980b9; border-bottom: 2px solid #2980b9; padding-bottom: 5px; margin-top: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #2980b9; color: white; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        tr:hover { background-color: #f1f1f1; }
-        .info-jalur { font-style: italic; color: #555; }
-        .harga { font-weight: bold; color: #27ae60; }
+        body { font-family: sans-serif; margin: 30px; background-color: #f8f9fa; }
+        h1 { text-align: center; color: #2c3e50; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #fff; }
+        th { background-color: #2c3e50; color: white; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        .badge { background-color: #e8f4fd; color: #2b6cb0; padding: 5px; border-radius: 4px; display: inline-block; }
     </style>
 </head>
 <body>
 
-    <h1>Sistem Manajemen Pendaftaran Mahasiswa Baru (PMB)</h1>
+    <h1>Daftar Pendaftaran Mahasiswa Baru (PMB)</h1>
 
-    <h2>Daftar Pendaftaran - Jalur Reguler</h2>
+    <h2>1. Jalur Reguler</h2>
     <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nama Calon</th>
-                <th>Asal Sekolah</th>
-                <th>Nilai Ujian</th>
-                <th>Biaya Dasar</th>
-                <th>Info Spesifik Jalur</th>
-                <th>Total Biaya Akhir</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            // Mengambil data menggunakan metode query spesifik Tahap 4
-            $dataReguler = PendaftaranReguler::getDaftarReguler($db);
-            
-            if (count($dataReguler) > 0) {
-                foreach ($dataReguler as $row) {
-                    // Instansiasi objek secara dinamis untuk memanfaatkan polimorfisme
-                    $objek = new PendaftaranReguler(
-                        $row['id_pendaftaran'],
-                        $row['nama_calon'],
-                        $row['asal_sekolah'],
-                        $row['nilai_ujian'],
-                        $row['biaya_pendaftaran_dasar'],
-                        $row['pilihan_prodi'],
-                        $row['lokasi_kampus']
-                    );
-                    ?>
-                    <tr>
-                        <td><?= $row['id_pendaftaran']; ?></td>
-                        <td><?= htmlspecialchars($row['nama_calon']); ?></td>
-                        <td><?= htmlspecialchars($row['asal_sekolah']); ?></td>
-                        <td><?= $row['nilai_ujian']; ?></td>
-                        <td>Rp <?= number_format($row['biaya_pendaftaran_dasar'], 0, ',', '.'); ?></td>
-                        <td class="info-jalur"><?php $objek->tampilkanInfoJalur(); ?></td>
-                        <td class="harga">Rp <?= number_format($objek->hitungTotalBiaya(), 0, ',', '.'); ?></td>
-                    </tr>
-                    <?php
-                }
-            } else {
-                echo "<tr><td colspan='7' style='text-align:center;'>Tidak ada data jalur Reguler.</td></tr>";
-            }
-            ?>
-        </tbody>
+        <tr>
+            <th>ID Daftar</th><th>Nama Calon</th><th>Asal Sekolah</th><th>Nilai</th><th>Atribut Unik</th><th>Total Biaya</th>
+        </tr>
+        <?php foreach ($dataReguler as $reg): ?>
+        <tr>
+            <td><?= $reg->getIdPendaftaran(); ?></td>
+            <td><?= $reg->getNamaCalon(); ?></td>
+            <td><?= $reg->getAsalSekolah(); ?></td>
+            <td><?= $reg->getNilaiUjian(); ?></td>
+            <td><div class="badge"><?php $reg->tampilkanInfoJalur(); ?></div></td>
+            <td><b>Rp <?= number_format($reg->hitungTotalBiaya(), 0, ',', '.'); ?></b></td>
+        </tr>
+        <?php endforeach; ?>
     </table>
 
-
-    <h2>Daftar Pendaftaran - Jalur Prestasi</h2>
+    <h2>2. Jalur Prestasi</h2>
     <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nama Calon</th>
-                <th>Asal Sekolah</th>
-                <th>Nilai Ujian</th>
-                <th>Biaya Dasar</th>
-                <th>Info Spesifik Jalur</th>
-                <th>Total Biaya Akhir</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            $dataPrestasi = PendaftaranPrestasi::getDaftarPrestasi($db);
-            
-            if (count($dataPrestasi) > 0) {
-                foreach ($dataPrestasi as $row) {
-                    $objek = new PendaftaranPrestasi(
-                        $row['id_pendaftaran'],
-                        $row['nama_calon'],
-                        $row['asal_sekolah'],
-                        $row['nilai_ujian'],
-                        $row['biaya_pendaftaran_dasar'],
-                        $row['jenis_prestasi'],
-                        $row['tingkat_prestasi']
-                    );
-                    ?>
-                    <tr>
-                        <td><?= $row['id_pendaftaran']; ?></td>
-                        <td><?= htmlspecialchars($row['nama_calon']); ?></td>
-                        <td><?= htmlspecialchars($row['asal_sekolah']); ?></td>
-                        <td><?= $row['nilai_ujian']; ?></td>
-                        <td>Rp <?= number_format($row['biaya_pendaftaran_dasar'], 0, ',', '.'); ?></td>
-                        <td class="info-jalur"><?php $objek->tampilkanInfoJalur(); ?></td>
-                        <td class="harga">Rp <?= number_format($objek->hitungTotalBiaya(), 0, ',', '.'); ?></td>
-                    </tr>
-                    <?php
-                }
-            } else {
-                echo "<tr><td colspan='7' style='text-align:center;'>Tidak ada data jalur Prestasi.</td></tr>";
-            }
-            ?>
-        </tbody>
+        <tr>
+            <th>ID Daftar</th><th>Nama Calon</th><th>Asal Sekolah</th><th>Nilai</th><th>Atribut Unik</th><th>Total Biaya</th>
+        </tr>
+        <?php foreach ($dataPrestasi as $prs): ?>
+        <tr>
+            <td><?= $prs->getIdPendaftaran(); ?></td>
+            <td><?= $prs->getNamaCalon(); ?></td>
+            <td><?= $prs->getAsalSekolah(); ?></td>
+            <td><?= $prs->getNilaiUjian(); ?></td>
+            <td><div class="badge"><?php $prs->tampilkanInfoJalur(); ?></div></td>
+            <td><b>Rp <?= number_format($prs->hitungTotalBiaya(), 0, ',', '.'); ?></b></td>
+        </tr>
+        <?php endforeach; ?>
     </table>
 
-
-    <h2>Daftar Pendaftaran - Jalur Kedinasan</h2>
+    <h2>3. Jalur Kedinasan</h2>
     <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nama Calon</th>
-                <th>Asal Sekolah</th>
-                <th>Nilai Ujian</th>
-                <th>Biaya Dasar</th>
-                <th>Info Spesifik Jalur</th>
-                <th>Total Biaya Akhir</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            $dataKedinasan = PendaftaranKedinasan::getDaftarKedinasan($db);
-            
-            if (count($dataKedinasan) > 0) {
-                foreach ($dataKedinasan as $row) {
-                    $objek = new PendaftaranKedinasan(
-                        $row['id_pendaftaran'],
-                        $row['nama_calon'],
-                        $row['asal_sekolah'],
-                        $row['nilai_ujian'],
-                        $row['biaya_pendaftaran_dasar'],
-                        $row['sk_ikatan_dinas'],
-                        $row['instansi_sponsor']
-                    );
-                    ?>
-                    <tr>
-                        <td><?= $row['id_pendaftaran']; ?></td>
-                        <td><?= htmlspecialchars($row['nama_calon']); ?></td>
-                        <td><?= htmlspecialchars($row['asal_sekolah']); ?></td>
-                        <td><?= $row['nilai_ujian']; ?></td>
-                        <td>Rp <?= number_format($row['biaya_pendaftaran_dasar'], 0, ',', '.'); ?></td>
-                        <td class="info-jalur"><?php $objek->tampilkanInfoJalur(); ?></td>
-                        <td class="harga">Rp <?= number_format($objek->hitungTotalBiaya(), 0, ',', '.'); ?></td>
-                    </tr>
-                    <?php
-                }
-            } else {
-                echo "<tr><td colspan='7' style='text-align:center;'>Tidak ada data jalur Kedinasan.</td></tr>";
-            }
-            ?>
-        </tbody>
+        <tr>
+            <th>ID Daftar</th><th>Nama Calon</th><th>Asal Sekolah</th><th>Nilai</th><th>Atribut Unik</th><th>Total Biaya</th>
+        </tr>
+        <?php foreach ($dataKedinasan as $kdn): ?>
+        <tr>
+            <td><?= $kdn->getIdPendaftaran(); ?></td>
+            <td><?= $kdn->getNamaCalon(); ?></td>
+            <td><?= $kdn->getAsalSekolah(); ?></td>
+            <td><?= $kdn->getNilaiUjian(); ?></td>
+            <td><div class="badge"><?php $kdn->tampilkanInfoJalur(); ?></div></td>
+            <td><b>Rp <?= number_format($kdn->hitungTotalBiaya(), 0, ',', '.'); ?></b></td>
+        </tr>
+        <?php endforeach; ?>
     </table>
 
 </body>
